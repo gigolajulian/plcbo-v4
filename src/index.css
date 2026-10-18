@@ -1,0 +1,294 @@
+@import './design/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*  The page's base layer and its five moves.
+ *
+ *  Every value these rules use comes from design/tokens.css. Nothing below writes a
+ *  colour, an easing or a duration of its own.
+ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--nav-height);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-ground font-text text-body text-ink antialiased;
+    text-rendering: optimizeLegibility;
+    /* Nothing on this page is wider than the page. The footer wordmark is
+       deliberately wider than the viewport, so it is clipped here rather than allowed
+       to scroll the document sideways. */
+    overflow-x: hidden;
+  }
+
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  ::selection {
+    background: rgb(var(--terracotta) / 0.22);
+    color: rgb(var(--ink));
+  }
+
+  /* Terracotta, use 2 of 3. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--terracotta));
+    outline-offset: 3px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+@layer components {
+  /*  The page shell, PLAN section 4. Page padding 48px at desktop stepping down to
+   *  20px at 375, content capped at 1440 and centred past that. */
+  .shell {
+    @apply mx-auto w-full max-w-content px-5 md:px-8 lg:px-12;
+  }
+
+  /*  The eyebrow: "(Selected work)". Parenthesised in the markup rather than by a
+   *  pseudo element, so the parentheses are part of the accessible name and a reader
+   *  hears the aside the way it is set. */
+  .eyebrow {
+    @apply block font-text text-eyebrow font-medium uppercase text-ink-3;
+  }
+
+  /*  The ruled row is the page's one repeating unit: a full-width hairline with the
+   *  content on a [14rem 1fr] grid from 768 up, stacked below it. */
+  .rule-row {
+    @apply grid grid-cols-1 items-baseline gap-x-6 gap-y-2 border-t border-hairline
+           py-7 md:grid-cols-row md:py-9;
+  }
+
+  /*  The page's one filled control. Terracotta, use 3 of 3. */
+  .btn-solid {
+    @apply inline-flex items-center gap-3 bg-terracotta px-7 py-4 font-text text-eyebrow
+           font-medium uppercase text-ground
+           transition-colors duration-250 ease-out-soft hover:bg-terracotta-fill;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-3 border border-ink/25 px-7 py-4 font-text
+           text-eyebrow font-medium uppercase text-ink
+           transition-colors duration-250 ease-out-soft hover:border-ink/60;
+  }
+}
+
+/*  ---------------------------------------------------------------------------
+ *  The five moves, PLAN section 8.
+ *
+ *  Each one is a clip box plus one child that travels. The box never moves and never
+ *  fades, so an IntersectionObserver always has a full-size rect to measure. An
+ *  earlier cut of this on v3 hid elements with a zero-area clip-path, which made the
+ *  observer meant to reveal them report ratio 0 forever, and six cells sat invisible
+ *  with no error anywhere. Hidden states here translate and fade. They do not clip
+ *  themselves out of existence.
+ *  --------------------------------------------------------------------------- */
+
+/*  1. Masked rise. The 103% is the reference's own number: 3% of overshoot so no
+ *  descender peeks out under the mask edge mid-travel. */
+@keyframes rise {
+  from {
+    transform: translateY(103%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.rise {
+  @apply block overflow-hidden;
+}
+.rise > .rise-i {
+  @apply block;
+  transform: translateY(103%);
+}
+.rise[data-shown] > .rise-i {
+  animation: rise var(--t-1000) var(--ease-garret) both;
+  animation-delay: calc(var(--stagger, 0) * 40ms);
+}
+
+/* 2. Rule draw. */
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.rule-draw {
+  @apply block h-px w-full bg-hairline;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.rule-draw[data-shown] {
+  animation: rule-draw var(--t-500) var(--ease-garret) both;
+}
+/* Terracotta, use 1 of 3: the one rule above Selected work. */
+.rule-draw.is-accent {
+  @apply bg-terracotta;
+}
+
+/*  3. Wipe. The frame arrives from the left while the photograph inside it runs the
+ *  opposite way at 1.75x, so the image appears to hold still while its window opens
+ *  over it. Both halves share one duration or the illusion comes apart. */
+@keyframes wipe-outer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes wipe-inner {
+  from {
+    transform: scale(1.75) translateX(100%);
+  }
+  to {
+    transform: scale(1) translateX(0);
+  }
+}
+.wipe {
+  @apply block overflow-hidden;
+}
+.wipe > .wipe-outer {
+  @apply block h-full w-full overflow-hidden;
+  transform: translateX(-100%);
+}
+.wipe .wipe-inner {
+  @apply block h-full w-full;
+  transform: scale(1.75) translateX(100%);
+}
+.wipe[data-shown] > .wipe-outer {
+  animation: wipe-outer var(--t-1000) var(--ease-garret) both;
+}
+.wipe[data-shown] .wipe-inner {
+  animation: wipe-inner var(--t-1000) var(--ease-garret) both;
+}
+
+/*  4. Trace. The rule under the nav item the page is currently in.
+ *
+ *  The item is the clip. Parked at -101% the rule sits one full width to the left of
+ *  its own item, which without a clip is exactly where the previous item is: the nav
+ *  rendered with a hairline under three of its four links, none of them the current
+ *  one. The padding is what gives the rule somewhere to live inside the box, since an
+ *  item clipping its own overflow cannot also hang a rule below itself. */
+.nav-item {
+  @apply relative block overflow-hidden pb-1;
+}
+.trace {
+  @apply absolute bottom-0 left-0 block h-px w-full bg-terracotta;
+  transform: translate3d(-101%, 0, 0);
+  transition: transform var(--t-500) var(--ease-garret);
+}
+.nav-item[aria-current="true"] .trace,
+.nav-item:hover .trace,
+.nav-item:focus-visible .trace {
+  transform: translate3d(0, 0, 0);
+}
+
+/*  5. Push arrow. One arrow, not two: it leaves to the right, jumps the gap while
+ *  outside the clip, and arrives back from the left. A second copy would need the two
+ *  to stay in step forever, and they drift. */
+@keyframes push-arrow {
+  0% {
+    transform: translateX(0);
+  }
+  49% {
+    transform: translateX(120%);
+  }
+  50% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+.push-arrow {
+  @apply inline-block overflow-hidden align-middle;
+  width: 1.1em;
+}
+.push-arrow > span {
+  @apply block;
+}
+.group:hover .push-arrow > span,
+.group:focus-visible .push-arrow > span,
+a:hover .push-arrow > span,
+a:focus-visible .push-arrow > span,
+button:hover .push-arrow > span,
+button:focus-visible .push-arrow > span {
+  animation: push-arrow var(--t-500) var(--ease-in-out-hard);
+}
+
+/*  The hover swap, carried over from v3 unchanged in behaviour: the masked rise run
+ *  on hover instead of on scroll.
+ *
+ *  Only the first copy is in flow. That is the whole trick. A clip box with two
+ *  in-flow lines in it has no single-line height to clip to and simply grows to fit
+ *  both, which printed every name on the page twice. The incoming copy is parked a
+ *  line below instead, outside the box.
+ *
+ *  vertical-align: bottom matters: an inline-block with overflow hidden sits on the
+ *  text baseline by default, which drops the whole row by its own descender depth the
+ *  moment this is applied. */
+.swap {
+  @apply inline-block overflow-hidden align-bottom;
+}
+.swap-track {
+  @apply relative block;
+  transition: transform var(--t-500) var(--ease-garret);
+}
+.swap-next {
+  @apply absolute left-0 top-full;
+  white-space: nowrap;
+}
+.group:hover .swap-track,
+.group:focus-visible .swap-track {
+  transform: translateY(-100%);
+}
+
+/*  Reduced motion.
+ *
+ *  The reference ships zero prefers-reduced-motion rules. That is a defect, not a
+ *  style choice, and it is not copied. Content still arrives, it just arrives by
+ *  fading: nothing translates, scales or wipes, and every element that was parked
+ *  off-stage is put back where it belongs rather than left hidden. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .rise > .rise-i,
+  .wipe > .wipe-outer,
+  .wipe .wipe-inner,
+  .rule-draw,
+  .trace,
+  .swap-track {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .push-arrow > span {
+    animation: none !important;
+  }
+
+  .rise[data-shown] > .rise-i,
+  .wipe[data-shown] > .wipe-outer,
+  .rule-draw[data-shown] {
+    animation: fade-in var(--t-250) var(--ease-out-soft) both !important;
+  }
+}

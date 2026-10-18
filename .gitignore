@@ -1,0 +1,9 @@
+node_modules
+dist
+*.tsbuildinfo
+*.local
+
+# Verification output: screenshots from scripts/verify.mjs, regenerated on demand.
+.qa
+# ffmpeg derivation cache for scripts/frames.mjs.
+.cache

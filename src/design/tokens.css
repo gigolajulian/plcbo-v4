@@ -1,0 +1,78 @@
+/*  PLCBO design tokens.
+ *
+ *  Every value the page is allowed to use, in one file. If a colour, an easing or a
+ *  duration is not here, it does not exist: a hex literal or a bare cubic-bezier in a
+ *  component is the thing this file was extracted to stop.
+ *
+ *  What is deliberately NOT here is the type ramp, which lives in tailwind.config.js
+ *  under `fontSize`. Tailwind reads it there, and mirroring nine roles into custom
+ *  properties would hide the numbers behind a second name for no gain. DESIGN.md
+ *  records that split so nobody goes looking for it twice.
+ *
+ *  Colour is v3's, verbatim, so the two cuts never read as different sites sitting
+ *  side by side.
+ */
+
+:root {
+  /*  ── Colour ────────────────────────────────────────────────────────────────
+   *
+   *  Channel triplets rather than hex, so every colour can take an opacity
+   *  modifier. Tailwind substitutes the alpha into rgb(var(--x) / <alpha-value>),
+   *  and it cannot split a hex string to do that: with #434343 here, border-ink/25
+   *  is not a class that exists and the build says so. Raw CSS wraps them the same
+   *  way, as rgb(var(--ink)).
+   *
+   *  --ink is #434343, not black, and that is the most important value in the file.
+   *  A soft charcoal on a light ground is what separates an expensive editorial page
+   *  from a default one: pure black on near-white is a contrast shout nobody asked
+   *  for, and it makes photographs look washed out beside it. Every reading colour
+   *  here is a step down from that charcoal, never up to black.
+   *
+   *  Terracotta appears exactly three times on the page. The rule above Selected
+   *  work, the focus ring, and the contact button fill. Never on the mark, never
+   *  over a photograph. That is the identity system's own rule, under 5%.
+   */
+  --ground: 244 244 243; /* #f4f4f3, neutral light, deliberately not cream */
+  --ink: 67 67 67; /* #434343, the soft charcoal, never #000 */
+  --ink-2: 94 94 94; /* #5e5e5e, secondary reading colour */
+  --ink-3: 138 138 138; /* #8a8a8a, 3.5:1, labels and meta only, never body */
+  --hairline: 223 223 220; /* #dfdfdc, a hairline, not a line */
+  --terracotta: 210 110 82; /* #d26e52, identity system v1.0 */
+  --terracotta-fill: 194 90 60; /* the deeper step white needs to clear AA */
+
+  /*  ── Motion ────────────────────────────────────────────────────────────────
+   *
+   *  Measured off the reference's own stylesheet rather than guessed: five named
+   *  easings and six duration steps. Every transition on this page animates
+   *  transform or opacity only, so all of it runs on the compositor. There is no
+   *  `transition: all` anywhere in this project, and adding one is a regression.
+   */
+  --ease-out-soft: cubic-bezier(0.28, 0, 0.49, 1); /* the workhorse */
+  --ease-out: cubic-bezier(0.28, 0.44, 0.49, 1);
+  --ease-garret: cubic-bezier(0.5, 0, 0, 1); /* long and decisive, for the reveals */
+  --ease-in-out-soft: cubic-bezier(0.72, 0, 0.28, 1);
+  --ease-in-out-hard: cubic-bezier(0.77, 0, 0.175, 1); /* the arrow's jump */
+
+  --t-125: 0.13s;
+  --t-150: 0.15s;
+  --t-250: 0.25s; /* the default: anything that just changes colour */
+  --t-350: 0.35s;
+  --t-500: 0.5s; /* a rule drawing itself, the trace, the arrow */
+  --t-1000: 1s; /* the long ones: a heading rising, a frame wiping in */
+
+  /*  ── Rhythm ────────────────────────────────────────────────────────────────
+   *
+   *  Two numbers do most of the page's spacing, so they are named rather than
+   *  retyped as bracket clamps in six section files. Section spacing matches v3's
+   *  own rule for the same reason the palette does.
+   */
+  --space-section: clamp(4rem, 12vh, 8rem); /* above and below every section */
+  --space-head: clamp(2rem, 5vh, 3.5rem); /* section heading to its content */
+  --space-block: clamp(2.5rem, 7vh, 5rem); /* between blocks inside a section */
+
+  /*  The sticky nav's height, so `scroll-padding-top` and `scroll-margin` agree
+   *  rather than being two hand-tuned numbers that drift apart. */
+  --nav-height: 88px;
+
+  color-scheme: light;
+}
